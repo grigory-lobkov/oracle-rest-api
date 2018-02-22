@@ -1,0 +1,4 @@
+# Exclude composer information
+www/vendor/
+www/composer.json
+www/composer.lock
