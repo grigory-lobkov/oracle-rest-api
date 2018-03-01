@@ -1,27 +1,33 @@
 <?php
-	require_once('vendor/autoload.php');
-	require_once('Config.php');
-	require_once('View.php');
-	require_once('MethodModificator.php');
-	require_once('Model/OracleDB.php');
-	require_once('Model/HTTPBasicAuth.php');
-	require_once('ValValidator.php');
-	require_once('RequestParser.php');
-	require_once('Model/OracleStorage.php');
+	/*
+		Dependencies between objects
+	*/
 
-//Файл-граф описания зависимостей объектов
+	require_once('Config.php');					// load configuration (public static class Config)
+	require_once('ValValidator.php');			// user values validator
+	require_once('RequestParser.php');			// parser of user requests to database
+	try {
+		require_once('Model/' . Config::$protocol . 'View.php');						// user-output class
+		require_once('Model/' . Config::$protocol . Config::$auth . 'Auth.php');		// authorization class
+	} catch (Exception $e) {
+		die('Protocol ' . Config::$protocol . ' vs ' . Config::$auth . ' auth is not supported yet. ' . $e->getMessage());
+	}
+	try {
+		require_once('Model/' . Config::$dbType . 'DB.php');			// database connection, configure
+		require_once('Model/' . Config::$dbType . 'Storage.php');		// database storage requests
+	} catch (Exception $e) {
+		die('Database ' . Config::$dbType . ' is not supported yet. ' . $e->getMessage());
+	}
 
 	return [
-	    'MainView' => DI\Object('View'),
-	    'MethodModif' => DI\Object('MethodModificator'),
-	    'DataBase' => DI\Object('OracleDB')
-	    	->constructor(Config::$dbServerAddress, Config::$dbServerPort
-	    		, Config::$dbName, Config::$dbEncoding, Config::$dbConnectionType
-		),
-	    'HTTPBasicAuth' => DI\Object('HTTPBasicAuth'),
-	    'ValValidator' => DI\Object('ValValidator'),
-	    'RequestParser' => DI\Object(),
-	   	'OracleStorage' => DI\Object(),
-
+		'View' => DI\Object(Config::$protocol . 'View'),
+		'Validator' => DI\Object('ValValidator'),
+		'Authorize' => DI\Object(Config::$protocol . Config::$auth . 'Auth'),
+		'DataBase' => DI\Object(Config::$dbType . 'DB')
+			->constructor(Config::$dbServerAddress, Config::$dbServerPort,
+				Config::$dbName, Config::$dbEncoding, Config::$dbConnectionType),
+		'DataStorage' => DI\Object(Config::$dbType . 'Storage'),
+		'Parser' => DI\Object('RequestParser'),
 	];
+
 ?>

@@ -1,62 +1,55 @@
 <?php
-//Класс предназначен для реализации конкретного типа авторизации Http Basic Authentification 
-//выделен в отдельный класс для того чтобы при необходимости тип авторизации можно было поменять
-	
-//Подключение класса интерфейса для всех реализаций подключения
-	require_once('IAuthorization.php');
-	require_once('HTTPConstant.php');
+	/*
+		Authentification, using Http Basic Authentification
+
+		Description of methods watch inside interface class
+	*/
+
+	require_once('IAuthorization.php');		// interface class
 
 	class HTTPBasicAuth implements IAuthorization{
-		
-		/**
-	     * Annotation combined with phpdoc:
-	     *
-	     * @Inject
-	     * @var View
-	     */
+
+		private $username;
+
+		private $password;
+
+	    private $validator;
+
 	    private $view;
-		
-		public function checkAuthorize($username,$password,$valvalidator,IDataBase $db){
-//			global $container;
-//			$view = $container->get('MainView');
-//Часть кода для принудительного сброса Authorization в случае необходимости
-/*			if(isset($_GET['unAuth'])) {
-				header('WWW-Authenticate: Basic realm="M3_login"');
-//				header('HTTP/1.1 401 Unauthorized');
-//				die ("Not authorized");
-				$this->view->sendResponse('401',HTTPConstant::$unauthorized);
-			}*/
-			
-			
-			if (!isset($username)||empty($username)) {
-			    header(HTTPConstant::$HTTPAuthHeader);
-				$this->view->sendResponse(HTTPConstant::$unauthorizedCode, HTTPConstant::$unauthorized);
+
+		function __construct() {
+			global $classes;
+			// inject dependencies
+			$this->view = $classes->get('View');
+			$this->validator = $classes->get('Validator');
+			// default username and password
+			$this->username = isset($_SERVER['PHP_AUTH_USER']) ? $_SERVER['PHP_AUTH_USER'] : null;
+			$this->password = isset($_SERVER['PHP_AUTH_PW']) ? $_SERVER['PHP_AUTH_PW'] : null;
+		}
+
+		public function check() {
+			global $container;
+			if (!isset($this->username) || empty($this->username)) {
+				// username is not set
+			    $this->view->sendUnauthorized();
 			} else {
-//			    echo "<p>Hello {$username}.</p>";
-//			    echo "<p>Вы ввели пароль {$password}.</p>";
 			    try {
-			    	$valvalidator->isValidUserName($username);
-			    	$valvalidator->isValidPassword($password);
+			    	$this->validator->isValidUserName($this->username);
+			    	$this->validator->isValidPassword($this->password);
 			    } catch (Exception $e) {
-					$addUnauthorized=HTTPConstant::$unauthorized;
-					$addUnauthorized['message']=$addUnauthorized['message'].'. '.$e->getMessage();
-					header(HTTPConstant::$HTTPAuthHeader);
-					$this->view->sendResponse(HTTPConstant::$unauthorizedCode, $addUnauthorized);
+			    	// username or password is not valid
+					$this->view->sendUnauthorized($e->getMessage());
 				}
-				$db->setUserName($username);
-				$db->setPassword($password);
-				try {
-					$db->connect();
-				} catch (Exception $e) {
-					$addUnauthorized=HTTPConstant::$unauthorized;
-					$addUnauthorized['message']=$addUnauthorized['message'].'. '.$e->getMessage();
-					header(HTTPConstant::$HTTPAuthHeader);
-					$this->view->sendResponse(HTTPConstant::$unauthorizedCode, $addUnauthorized);
-				}
-			    
 			}
 		}
-		
-		
+
+		public function getUsername() {
+			return $this->username;
+		}
+
+		public function getPassword() {
+			return $this->password;
+		}
+
 	}
 ?>

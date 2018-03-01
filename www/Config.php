@@ -1,19 +1,38 @@
 <?php
-	
+	/*
+		Configuration of database server
+	*/
+
 	class Config{
-	
-		//IP-адрес сервера БД
+
+		// User-exchange protocol
+		// Supported: HTTP
+		public static $protocol = 'HTTP';
+
+		// Authorization method
+		// Supported: Basic
+		public static $auth = 'Basic';
+
+		// Database server (DB) type
+		// Supported: Oracle
+		public static $dbType = 'Oracle';
+		
+		// DB address
 		public static $dbServerAddress = '192.168.0.31';
-		//Порт сервера БД
+
+		// DB port
 		public static $dbServerPort = '1521';
-		//Имя сервера БД
+
+		// DB name, SID for Oracle
 		public static $dbName = 'MAN';
-		//Кодировка сервера БД
+
+		// DB encoding
 		public static $dbEncoding = 'UTF8';
-		//Тип подключения к БД (использовать пул или нет)
+
+		// DB connection type
+		// for Oracle "POOLED" is better, need to be enabled on the server: dbms_connection_pool.start_pool();
 		public static $dbConnectionType = 'POOLED';
-		//Обяъвляю символ, который будет являться разделителем между параметрами запроса к серверу
-		public static $urlParamDelim = '&';
-	
+
 	}
+
 ?>

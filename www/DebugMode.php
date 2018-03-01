@@ -1,4 +1,9 @@
-﻿<?php
-//Скрипт необходим для изменение настроек на время отладки
-	ini_set('display_errors',1);//Включить отображение ошибок на странице
+<?php
+	/*
+		Debug mode on PHP server
+	*/
+
+	ini_set('display_errors', 1);	// show PHP errors
+	error_reporting(E_ALL);			// show all errors
+
 ?>

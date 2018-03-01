@@ -4,22 +4,21 @@ PACKAGE       API AUTHID CURRENT_USER AS
 Предназначен для хранения объектов и процедур необходимых для работы api для обращения к Oracle
 из сторонних приложений */
 
-    task_id_param VARCHAR(6) := 'taskId';
-    table_param VARCHAR2(5) := 'table';
-    fields_param VARCHAR2(6) := 'fields';
-    order_param VARCHAR2(5) := 'order';
-    offset_param VARCHAR2(6) := 'offset';
-    limit_param VARCHAR2(5) := 'limit';
+    table_param varchar2(5) := 'table';
+    fields_param varchar2(6) := 'fields';
+    order_param varchar2(5) := 'order';
+    offset_param varchar2(6) := 'offset';
+    limit_param varchar2(5) := 'limit';
 
 
     function select_rows(in_param_json varchar2)
 /* Добавил Лобков Г.Г. 07.02.2018
 Функция возвращяет JSON-строку с результатами выборки по указанным параметрам
 in_param_json - параметры запроса в json формате */
-    return CLOB;
+    return clob;
 
 
-    function insert_rows(in_source_name varchar2, in_param_json VARCHAR2)
+    function insert_rows(in_source_name varchar2, in_param_json varchar2)
 /* Добавил Лобков Г.Г. 07.02.2018
 Функция необходима для вставки данных переданных в формате JSON в соответсвующие поля указанного источника
 in_source_name - название таблицы/представления для вставки данных

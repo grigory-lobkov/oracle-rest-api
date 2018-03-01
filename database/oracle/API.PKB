@@ -1,5 +1,5 @@
 ﻿CREATE OR REPLACE
-package body       api is
+PACKAGE BODY       API IS
 /* Пакет добавил Лобков Г.Г. 06.02.2018
 Предназначен для хранения объектов и процедур необходимых для работы api для обращения к Oracle
 из сторонних приложений */
@@ -80,9 +80,6 @@ in_param - параметры запроса */
                 end;
             end if;
             case
-                -- пропускаемые параметры
-                when pkey = task_id_param then
-                    null;
                 --Сохранить в переменную основной источник для выборки
                 when pkey = table_param then
                     source_str:= pvalue;
@@ -252,8 +249,8 @@ in_param_json - параметры вставки, варианты:
         vals_str varchar2(4000);
         query_str varchar2(4000) := '';
         ind numeric(10) := 0;
-        view_schema_str varchar2(8):='w_all.';
-        view_ext_str varchar2(8):='#api';
+        insert_schema_str varchar2(8):='w_all.';
+        insert_ext_str varchar2(8):='#api';
     begin
 /*        if not in_param.exist('data') then
             tmp_json_value := in_param);
@@ -306,7 +303,7 @@ in_param_json - параметры вставки, варианты:
                         vals_str := vals_str || '"' || replace(tmp_json_value.to_char,'"','''') || '",'; --значение поля строковое
                     end if;
                 end loop;
-                query_str := query_str || 'into ' || view_schema_str || in_object || view_ext_str || ' (' || fields_str
+                query_str := query_str || 'into ' || insert_schema_str || in_object || insert_ext_str || ' (' || fields_str
                     || ') VALUES (' || rtrim(vals_str, ',') || ')' || chr(13);
                 ind := ind + 1;
             end loop;
@@ -327,7 +324,7 @@ in_param_json - параметры вставки, варианты:
                     end if;
                     fields_str := fields_str || pkey || ',';
                 end loop;
-                query_str := query_str || 'into ' || view_schema_str || in_object || view_ext_str || ' (' || rtrim(fields_str, ',')
+                query_str := query_str || 'into ' || insert_schema_str || in_object || insert_ext_str || ' (' || rtrim(fields_str, ',')
                     || ') VALUES (' || rtrim(vals_str, ',') || ')' || chr(13);
                 if ind = 0 then exit; end if;
                 ind := ind + 1;
@@ -367,5 +364,5 @@ in_param_json - строка в формате json */
     end;
 
 
-end api;
+END API;
 /

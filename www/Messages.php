@@ -1,13 +1,14 @@
 <?php
-	//Клсс предназначен для хранения статических переменных с сообщениями (Например: об ошибках)
+	/*
+		Some static string constants to show user
+	*/
+
 	class Messages {
-		
-	//Текст сообщения об ошибке в случае если передан неизвестный тип HTTP Заголовка
-		public static $unknowHTTPHeaderErr = 'Unknow header';
-		
-		public static $TableNameNotFoundErr = '. Table name not found in URL';
-		
-		public static $PostDataNotSetErr = 'POST parameter "data" is not set';
-	
+
+		// for RequestParser.php
+		public static $RequestMethodUnknownErr = 'Request method is unknown';
+		public static $TableNameNotFoundErr = 'Table name not found in URL';
+		public static $PostDataNotSetErr = 'POST data have not found';
+
 	}
 ?>
