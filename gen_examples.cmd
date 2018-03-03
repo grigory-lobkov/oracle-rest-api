@@ -11,6 +11,20 @@ setlocal
 set out=EXAMPLES.md
 del %out%
 
+set params=--data "{DEV_ID:24,TYPE:1}" http://w_action1:r1gn5@192.168.11.31/action
+call :makecurl
+set params=--data "{data:{DEV_ID:24,TYPE:2}}" http://w_action1:r1gn5@192.168.11.31/action
+call :makecurl
+set params=--data "{data:[{DEV_ID:24,TYPE:3},{DEV_ID:24,TYPE:3}]}" http://w_action1:r1gn5@192.168.11.31/action
+call :makecurl
+set params=--data "{names:[DEV_ID,"TYPE"],data:[[24,4],[24,5],[24,6]]}" http://w_action1:r1gn5@192.168.11.31/action
+call :makecurl
+set params=--data "{data:[]}" http://w_action1:r1gn5@192.168.11.31/action
+call :makecurl
+set params=--data "{data:{}}" http://w_action1:r1gn5@192.168.11.31/action
+call :makecurl
+set params=--data "{}" http://w_action1:r1gn5@192.168.11.31/action
+call :makecurl
 set params="http://w_action1:r1gn5@192.168.11.31/action/26477680"
 call :makecurl
 set params="http://w_action1:r1gn5@192.168.11.31/action?DEV_ID=24&fields=ID,TYPE"
