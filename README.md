@@ -1,19 +1,10 @@
 # Overview
 
-Not completly working yet!
-
 This API is used to access througth web-server to database, using REST metodology.
 
 My goal is to refuse a heavy database client on controller side, replacing it by lightweight web-requests.
 
-Programming syntax is Java-oriented OOP, including Dependency Injection
-
-- Class-based
-- Dynamic passing
-- Encapsulation
-- Composition, inheritance, and delegation
-- Polymorphism
-- Open recursion
+Programming way is Java-oriented OOP, including Dependency Injection
 
 
 ## Prerequisities
@@ -41,3 +32,5 @@ $ curl http://dbuser:dbpass@localhost/dbtablename?TYPE=5&limit=2&fields=FIELDNAM
 $ curl -i -X POST -H "Content-Type: application/json" -d '{"FIELDNAME1":"some text","FIELDNAME2":"0","FIELDNAME3":"1"}' http://dbuser:dbpass@localhost/dbtablename
 $ curl -i -X POST -H "Content-Type: application/json" -d '{"FIELDNAME1":"some text","FIELDNAME2":0,"FIELDNAME3":1}' http://dbuser:dbpass@localhost/dbtablename
 ```
+[see more examples](https://github.com/grigory-lobkov/php-db-rest-api/blob/master/EXAMPLES.md)
+
