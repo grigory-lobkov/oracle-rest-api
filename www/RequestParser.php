@@ -1,6 +1,12 @@
 <?php
 	/*
 		Parsing user requests and redirect it to database
+
+		Copyright (c) 2018 Grigory Lobkov
+		THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+		OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+		LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+		IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	*/
 
 	require_once('Messages.php');		// load messages
@@ -30,24 +36,33 @@
 			switch ($requestMethod) {
 				// Get data (select)
     			case 'GET':
-					$this->dataStorage->selectDataToJSON($requestData);
+					$this->dataStorage->select($requestData);
 					break;
 				// New data (insert)
 				case 'POST':
 					if ($postData == '') {
 						throw new Exception(Messages::$PostDataNotSetErr);
 					}
-					$this->dataStorage->insertJSONDataToDB($requestSource, $postData);
+					$this->dataStorage->insert($requestSource, $postData);
 					break;
-				// Change one item (update)
+				// Change/Get one field (update/select)
 				case 'PATH':
+					if ($postData === false) {
+						$this->dataStorage->getField($requestData);
+					} else {
+						$this->dataStorage->setField($requestData, $postData);
+					}
+					break;
 				// Change data (update)
 				case 'PUT':
-					die('Not working yet, sorry');	// todo
+					if ($postData == '') {
+						throw new Exception(Messages::$PostDataNotSetErr);
+					}
+					$this->dataStorage->update($requestData, $postData);
 					break;
 				// Delete data (delete)
 				case 'DELETE':
-					die('Not working yet, sorry');	// todo
+					$this->dataStorage->delete($requestData);
 					break;
 				// Unknown method
 				default:

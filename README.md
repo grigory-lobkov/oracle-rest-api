@@ -11,7 +11,7 @@ Programming way is Java-oriented OOP, including Dependency Injection
 
 - PHP 5.5 or higher
 - composer
-- database connection from PHP
+- PHP database connection module
 
 
 ## Supported databases

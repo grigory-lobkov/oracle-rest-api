@@ -47,24 +47,6 @@ server {
 ```
 
 
-### Runkit installation example (for development)
-
-```bash
-$ sudo yum install git
-$ git clone https://github.com/zenovich/runkit.git
-$ cd runkit
-$ pecl install package.xml
-```
-
-Add lines to php.ini
-
-```bash
-$ vi /etc/php.ini
-extension = runkit.so
-runkit.internal_override = true
-```
-
-
 ### Request examples
 
 ```bash
@@ -73,8 +55,3 @@ $ curl http://dbuser:dbpass@localhost/dbtablename?TYPE=5&limit=2&fields=FIELDNAM
 $ curl -i -X POST -H "Content-Type: application/json" -d '{"FIELDNAME1":"some text","FIELDNAME2":"0","FIELDNAME3":"1"}' http://dbuser:dbpass@localhost/dbtablename
 $ curl -i -X POST -H "Content-Type: application/json" -d '{"FIELDNAME1":"some text","FIELDNAME2":0,"FIELDNAME3":1}' http://dbuser:dbpass@localhost/dbtablename
 ```
-
-
-### Feedback
-
-Please, let me know, if there is some errors in this readme.

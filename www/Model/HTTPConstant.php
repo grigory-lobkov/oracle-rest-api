@@ -1,6 +1,12 @@
 <?php
 	/*
 		Storage of HTTP-specific constants
+
+		Copyright (c) 2018 Grigory Lobkov
+		THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+		OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+		LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+		IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	*/
 
 	class HTTPConstant {
@@ -33,14 +39,14 @@
 		public static $badRequest = array(
     		'status'=>'400',
 			'message'=>'Bad Request',
-			'more_info'=>'http:\\api.m3ati.ru_net_documentation_url'
+			'more_info'=>'Please, check request parameters'
 		);
 
 		// User not found or have a bad name/password
 		public static $unauthorized = array(
     		'status'=>'401',
 			'message'=>'Unauthorized user',
-			'more_info'=>'http:\\api.m3ati.ru_net_documentation_url'
+			'more_info'=>'Please, check your username/password'
 		);
 
 	}

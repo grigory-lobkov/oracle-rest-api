@@ -5,6 +5,13 @@ PACKAGE BODY       API IS
 
         Table name must start with "table_prefix" and finish with "table_postfix"
         Transport protocol: JSON
+
+        Copyright (c) 2018 Grigory Lobkov
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+        TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+        THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+        CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+        DEALINGS IN THE SOFTWARE.
     */
 
 
@@ -24,7 +31,7 @@ PACKAGE BODY       API IS
             result := json(in_str_json); -- convert json string to json object
         exception when others
         then
-            raise_application_error(-20001,'Wrong JSON format:' || chr(13) || sqlerrm);
+            raise_application_error(-20001,'Wrong JSON format: ' || sqlerrm);
         end;
         return result;
     end;
@@ -189,7 +196,7 @@ PACKAGE BODY       API IS
             dbms_lob.createtemporary(result, true);
         exception when others
         then
-            raise_application_error(-20001, 'Error prepare CLOB:' || chr(13) || sqlerrm);
+            raise_application_error(-20001, 'Error prepare CLOB: ' || sqlerrm);
         end;
         begin
             -- Without repeating field names
@@ -204,7 +211,7 @@ PACKAGE BODY       API IS
             --[{"ID":1,"TYPE":1},{"ID":2,"TYPE":1},{"ID":3,"TYPE":1},{"ID":4,"TYPE":1},{"ID":5,"TYPE":1}]
         exception when others
         then
-            raise_application_error(-20001, select_str || chr(13) || sqlerrm);
+            raise_application_error(-20001, select_str || ' ' || sqlerrm);
         end;
         --return result;
         -- JSON_LIST returns not JSON, fold it to "{data:" and "}"
@@ -370,11 +377,12 @@ PACKAGE BODY       API IS
         if insert_str is not null
         then
             begin
-                execute immediate insert_str using out fetched;
+                execute immediate insert_str
+                    using out fetched;
                 commit;
             exception when others
             then
-                raise_application_error(-20001, insert_str || chr(13) || sqlerrm);
+                raise_application_error(-20001, insert_str || ' ' || sqlerrm);
             end;
         end if;
         return '{rows:' || to_char(fetched) || '}';
@@ -442,7 +450,7 @@ PACKAGE BODY       API IS
                 commit;
             exception when others
             then
-                raise_application_error(-20001, query_str || chr(13) || sqlerrm);
+                raise_application_error(-20001, query_str || ' ' || sqlerrm);
             end;
         end if;
         return '{rows:' || to_char(fetched) || '}';
@@ -540,14 +548,22 @@ PACKAGE BODY       API IS
         Generates FieldSelect statement, filtered by in_filter
     */
     is
+        filterj json;
+        getField_str varchar2(4000);
     begin
         -- check, if fields set is provided
         if not in_filter.exist(fields_param)
         then
             raise_application_error(-20001, 'Parameter `' || fields_param || '` is mandatory');
         end if;
+        filterj := in_filter;
+        -- get selected field name
+        getField_str := filterj.get(fields_param).get_string;
+        filterj.remove(fields_param);
+        -- modify field name parameter
+        filterj.put(fields_param,'('||getField_str||')');
         -- generate FieldSelect and return it
-        return prepare_select(in_filter);
+        return prepare_select(filterj);
     end;
 
     function execute_get_field(select_str varchar2) return blob
@@ -555,7 +571,41 @@ PACKAGE BODY       API IS
         Executes one field select query "select_str" and returns raw result, BLOB
     */
     is
-        result dbms_sql.blob_table;
+        blobTbl dbms_sql.blob_table;
+        clobTbl dbms_sql.clob_table;
+        clobSelect varchar2(4000);
+
+        function clob2blob(in_clob clob) return blob
+        -- Converts CLOB in_clob to BLOB and return it
+        is
+            result           blob;
+            loc_dest_offsset integer := 1;
+            loc_src_offsset  integer := 1;
+            loc_lang_context integer := dbms_lob.default_lang_ctx;
+            loc_warning      integer := 0;
+        begin
+            if in_clob is null
+            then
+                -- nothing to do
+                return null;
+            end if;
+            -- prepare CLOB
+            dbms_lob.createTemporary(result, true);
+            -- convert
+            dbms_lob.converttoblob(
+                dest_lob     => result,
+                src_clob     => in_clob,
+                amount       => dbms_lob.lobmaxsize,
+                dest_offset  => loc_dest_offsset,
+                src_offset   => loc_src_offsset,
+                blob_csid    => dbms_lob.default_csid,
+                lang_context => loc_lang_context,
+                warning      => loc_warning);
+            return result;
+        exception when others
+        then
+            raise;
+        end;
     begin
         -- check if query is empty
         if select_str = ''
@@ -563,20 +613,38 @@ PACKAGE BODY       API IS
             return null;
         end if;
         begin
-            -- fill the results array
-            execute immediate select_str bulk collect into result;
+            -- try to fill the results array of BLOB
+            execute immediate select_str
+                bulk collect into blobTbl;
+            if blobTbl.count > 0
+            then
+                -- return first value of results set
+                return blobTbl(1);
+            end if;
         exception when others
         then
-            raise_application_error(-20001, select_str || chr(13) || sqlerrm);
+            -- ORA-00932: inconsistent datatypes, expected BLOB, get CLOB/VARCHAR2/NUMBER
+            if sqlcode = -932
+            then
+                begin
+                    -- try to get the result array of CLOB
+                    clobSelect := 'select to_clob' || substr(select_str,8);
+                    execute immediate clobSelect
+                        bulk collect into clobTbl;
+                    if clobTbl.count > 0
+                    then
+                        -- convert to blob and return first value of results set
+                        return clob2blob(clobTbl(1));
+                    end if;
+                exception when others
+                then
+                    raise_application_error(-20001, clobSelect || ' ' || sqlerrm);
+                end;
+            else
+                raise_application_error(-20001, select_str || ' ' || sqlerrm);
+            end if;
         end;
-        if result.count > 0
-        then
-            -- return first value of results set
-            return result(1);
-        else
-            -- result is empty
-            return null;
-        end if;
+        return null;
     end;
 
     function get_field(in_filter_json varchar2) return blob
@@ -647,13 +715,15 @@ PACKAGE BODY       API IS
             if in_blob is null
             then
                 -- nothing to do
+                raise_application_error(-20001, '!!!!!!');
                 return null;
             end if;
-            --copy blob to another container, elsewhere it somewhy gets error ORA-22275
-            --todo: try a different type of blob inside PHP to delete these two lines
+            --copy BLOB to another container, elsewhere it somewhy gets error ORA-22275
+            --todo: try a different type of BLOB inside PHP to delete these two lines - done, failed
+            --todo: advise something, please
             dbms_lob.createtemporary(loc_blob, true);
             dbms_lob.copy(loc_blob, in_blob, dbms_lob.getlength(in_blob), 1, 1);
-            -- prepare clob
+            -- prepare CLOB
             dbms_lob.createTemporary(result, true);
             -- convert
             dbms_lob.converttoclob(
@@ -674,42 +744,53 @@ PACKAGE BODY       API IS
             return '{rows:0}';
         end if;
         begin
-            -- try to set field of type BLOB
-            datalen := length(in_data);
-            execute immediate update_str using in in_data;
+            datalen := dbms_lob.getlength(in_data);
+            if datalen = 0
+            then
+                -- just set an empty value
+                execute immediate update_str
+                    using in '';
+            else
+                -- try to set field of type BLOB
+                execute immediate update_str
+                    using in in_data;
+            end if;
             fetched := sql%rowcount;
             commit;
         exception when others
         then
-            -- ORA-00932: inconsistent datatypes, expected varchar2, get blob
-            if sqlcode = -932 and datalen<32000
+            -- ORA-00932: inconsistent datatypes, expected VARCHAR2, get BLOB
+            if sqlcode = -932
             then
                 begin
                     -- try to set field of type CLOB, VARCHAR2
                     datac := blob2clob(in_data);
-                    execute immediate update_str using in datac;
+                    execute immediate update_str
+                        using in datac;
                     fetched := sql%rowcount;
                     commit;
                 exception when others
                 then
-                    -- ORA-00932: inconsistent datatypes, expected number, get blob
+                    -- ORA-00932: inconsistent datatypes, expected NUMBER, get CLOB
                     if sqlcode = -932 and datalen<50
                     then
                         begin
                             -- try to set field of type NUMBER
-                            execute immediate update_str using in to_number(datac);
+                            execute immediate update_str
+                                using in to_number(datac);
                             fetched := sql%rowcount;
                             commit;
                         exception when others
                         then
-                            raise_application_error(-20001, update_str || chr(13) || sqlerrm);
+                            raise_application_error(-20001, update_str || ' ' || sqlerrm);
                         end;
                     else
-                        raise_application_error(-20001, update_str || chr(13) || sqlerrm);
+                        --raise_application_error(-20001, update_str || ' ' || sqlerrm);
+                        raise;
                     end if;
                 end;
             else
-                raise_application_error(-20001, update_str || chr(13) || sqlerrm);
+                raise_application_error(-20001, update_str || ' ' || sqlerrm);
             end if;
         end;
         return '{rows:' || to_char(fetched) || ',bytes:' || datalen || '}';
