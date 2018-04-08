@@ -66,7 +66,7 @@ PACKAGE BODY       API IS
             if ispvalnumeric
             then
                 -- value is numeric
-                pvalue := in_filter.get(i).get_number;
+                pvalue := replace(in_filter.get(i).get_number,',','.');
             else
                 -- value is string
                 -- try to trim quotes, check numeric
@@ -77,7 +77,7 @@ PACKAGE BODY       API IS
                 exception when others
                 then
                     -- value is not numeric
-                    pvalue := replace(in_filter.get(i).get_string,'"','\"');
+                    pvalue := replace(in_filter.get(i).get_string,'''','''''');
                 end;
             end if;
             -- analyze parameter names
@@ -118,7 +118,7 @@ PACKAGE BODY       API IS
                     then
                         where_str := where_str || '"' || pkey || '"=' || pvalue || ' and ';
                     else
-                        where_str := where_str || '"' || pkey || '"="' || pvalue || '" and ';
+                        where_str := where_str || '"' || pkey || '"=''' || pvalue || ''' and ';
                     end if;
             end case;
         end loop;
@@ -328,9 +328,9 @@ PACKAGE BODY       API IS
                 value_jv := vals_jl.get(i);
                 if value_jv.is_number
                 then
-                    vals_str := vals_str || value_jv.get_number || ',';
+                    vals_str := vals_str || replace(value_jv.get_number,',','.') || ',';
                 else
-                    vals_str := vals_str || '"' || replace(value_jv.to_char,'"','\"') || '",';
+                    vals_str := vals_str || '''' || replace(ltrim(rtrim(value_jv.to_char,'"'),'"'),'''','''''') || ''',';
                 end if;
             end loop;
             if not fields_predefined
@@ -347,11 +347,11 @@ PACKAGE BODY       API IS
             if vals_str is not null
             then
                 -- append query string with insert of new row
-                query_str := query_str || 'insert into ' || table_prefix || in_object || table_postfix ||
-                    ' (' || fields_str || ') VALUES (' || rtrim(vals_str, ',') || ');c:=c+sql%rowcount;' || chr(13);
+                query_str := query_str || 'begin insert into ' || table_prefix || in_object || table_postfix ||
+        if query_str is null
+                    ' (' || fields_str || ') VALUES (' || rtrim(vals_str, ',') || ');c:=c+sql%rowcount;end;' || chr(13);--exception when others then null;
             end if;
         end loop;
-        if query_str is null
         then
             -- query is empty
             return '';
@@ -491,10 +491,10 @@ PACKAGE BODY       API IS
         then
             raise_application_error(-20001, 'Parameter `' || fields_param || '` is not acceptable');
         end if;
+        -- generate select on deleted rows
         filterj := in_filter;
         -- add out fields definition
         filterj.put(fields_param,'rowid');
-        -- generate select on deleted rows
         query_str := prepare_select(filterj);
         -- generate updating fields string
         keys_jl := in_data.get_keys;
@@ -506,9 +506,9 @@ PACKAGE BODY       API IS
             value_jv := in_data.get(i);
             if value_jv.is_number
             then
-                update_str := update_str || value_jv.get_number || ',';
+                update_str := update_str || replace(value_jv.get_number,',','.') || ',';
             else
-                update_str := update_str || '"' || replace(value_jv.to_char,'"','\"') || '",';
+                update_str := update_str || '''' || replace(value_jv.to_char,'''','''''') || ''',';
             end if;
         end loop;
         if update_str is null
@@ -578,10 +578,10 @@ PACKAGE BODY       API IS
         function clob2blob(in_clob clob) return blob
         -- Converts CLOB in_clob to BLOB and return it
         is
+            loc_lang_context integer := dbms_lob.default_lang_ctx;
             result           blob;
             loc_dest_offsset integer := 1;
             loc_src_offsset  integer := 1;
-            loc_lang_context integer := dbms_lob.default_lang_ctx;
             loc_warning      integer := 0;
         begin
             if in_clob is null
@@ -703,10 +703,10 @@ PACKAGE BODY       API IS
         pragma autonomous_transaction; -- allows DML operations inside a query
 
         function blob2clob(in_blob blob) return clob
+            loc_dest_offsset integer := 1;
         -- Converts BLOB in_blob to CLOB and return it
         is
             result           clob;
-            loc_dest_offsset integer := 1;
             loc_src_offsset  integer := 1;
             loc_lang_context integer := dbms_lob.default_lang_ctx;
             loc_warning      integer := 0;
@@ -809,10 +809,10 @@ PACKAGE BODY       API IS
         return
             -- executes query, updating one field value
             execute_set_field(
+                in_data
                 -- build query, based on json parameter
                 prepare_set_field(filterj),
                 -- data to set
-                in_data
             );
     end;
 
