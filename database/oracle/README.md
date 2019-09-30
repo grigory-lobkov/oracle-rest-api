@@ -5,7 +5,7 @@ Don't forget to learn php how-to connect to oracle database for [oci_pconnect](h
 If you have Oracle 12c or later, please, test package without PLJSON installation.
 
 ### Install Oracle PLJSON
-1.  Download the latest release -- https://github.com/pljson/pljson/releases
+1.  Please, use old version of PLJSON [json_v1_0_5.zip](https://github.com/grigory-lobkov/oracle-rest-api/raw/master/database/oracle/json_v1_0_5.zip) or [mirror](https://github.com/pljson/pljson/archive/v1.0.6.zip), current version is not supported for now https://github.com/pljson/pljson/releases
 2.  Extract the zip file
 3.  Use `sql*plus`, or something capable of running `sql*plus` scripts, to
     run the `install.sql` script
